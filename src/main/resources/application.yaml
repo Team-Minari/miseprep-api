@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: miseprep-api
+  profiles:
+    active: local
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    show-sql: true
+
+server:
+  port: 28080
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration:
+    access: ${JWT_ACCESS_EXPIRATION}
+    refresh: ${JWT_REFRESH_EXPIRATION}

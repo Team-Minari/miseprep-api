@@ -3,14 +3,8 @@ spring:
     name: miseprep-api
   profiles:
     active: local
-  jpa:
-    hibernate:
-      ddl-auto: create
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        format_sql: true
-    show-sql: true
+  jackson:
+    property-naming-strategy: SNAKE_CASE
 
 server:
   port: 28080

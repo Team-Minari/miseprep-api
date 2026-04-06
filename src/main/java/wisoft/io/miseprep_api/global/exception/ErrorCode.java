@@ -15,7 +15,35 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다"),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),
 
-    // 도메인별 추가 예정
+    // Auth
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다"),
+    UNSUPPORTED_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "지원하지 않는 OAuth 제공자입니다"),
+    INVALID_KAKAO_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 카카오 토큰입니다"),
+
+    // Member
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다"),
+    MEMBER_DELETED(HttpStatus.FORBIDDEN, "탈퇴한 회원입니다"),
+
+    // Product
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다"),
+
+    // Cart
+    CART_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 장바구니입니다"),
+    CART_ACCESS_DENIED(HttpStatus.FORBIDDEN, "장바구니에 접근할 권한이 없습니다"),
+    CART_OWNER_REQUIRED(HttpStatus.FORBIDDEN, "장바구니 소유자만 수행할 수 있습니다"),
+    ALREADY_CART_PARTICIPANT(HttpStatus.CONFLICT, "이미 참여 중인 장바구니입니다"),
+    CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 장바구니 상품입니다"),
+    CART_ITEM_ALREADY_CHECKED(HttpStatus.CONFLICT, "이미 체크된 상품입니다"),
+    CART_ITEM_NOT_CHECKED(HttpStatus.CONFLICT, "체크되지 않은 상품입니다"),
+    CART_BUDGET_EXCEEDED(HttpStatus.BAD_REQUEST, "예산을 초과합니다"),
+    INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "수량은 1 이상이어야 합니다"),
+    INVALID_BUDGET(HttpStatus.BAD_REQUEST, "예산은 0보다 커야 합니다"),
+
+    // Invitation
+    INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 초대입니다"),
+    INVITATION_ALREADY_PENDING(HttpStatus.CONFLICT, "이미 대기 중인 초대가 있습니다"),
+    INVALID_LINK_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 초대 링크입니다"),
+    SELF_INVITATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "본인에게 초대를 보낼 수 없습니다"),
     ;
 
     private final HttpStatus status;

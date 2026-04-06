@@ -1,0 +1,1 @@
+- [카카오 디벨로퍼스 설정 TODO](project_kakao_todo.md) — 카카오 OAuth 앱 생성 및 테스터 등록 미완료, 로그인 테스트 전 필요

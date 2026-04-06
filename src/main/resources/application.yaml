@@ -1,13 +1,16 @@
+server:
+  port: 28080
+
 spring:
   application:
     name: miseprep-api
+
   profiles:
     active: local
+
   jackson:
     property-naming-strategy: SNAKE_CASE
 
-server:
-  port: 28080
 
 springdoc:
   swagger-ui:

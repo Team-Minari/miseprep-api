@@ -18,5 +18,3 @@ springdoc:
   swagger-ui:
     config-url: /miseprep/v3/api-docs/swagger-config
     url: /miseprep/v3/api-docs
-  servers:
-    - url: https://task-api.wisoft.io/miseprep

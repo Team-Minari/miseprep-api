@@ -1,3 +1,7 @@
+server:
+  servlet:
+    context-path: /miseprep
+
 spring:
   datasource:
     url: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul

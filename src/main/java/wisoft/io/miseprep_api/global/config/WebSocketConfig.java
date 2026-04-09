@@ -20,7 +20,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("https://miseprep.vercel.app", "http://localhost:3000");
+                .setAllowedOriginPatterns("*");
     }
 
     @Override

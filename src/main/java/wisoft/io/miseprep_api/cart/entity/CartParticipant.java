@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "cart_participants",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"cart_id", "user_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"cart_id", "member_id"})
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CartParticipant {
@@ -26,7 +26,7 @@ public class CartParticipant {
     private Cart cart;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
     @Column(nullable = false)

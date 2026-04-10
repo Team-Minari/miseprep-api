@@ -51,6 +51,18 @@ public class Cart extends BaseEntity {
         this.budget = budget;
     }
 
+    public void updatePurpose(String purpose) {
+        this.purpose = purpose;
+    }
+
+    public void updateIsPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public void transferOwner(Member owner) {
+        this.owner = owner;
+    }
+
     public boolean isOwner(Long memberId) {
         return this.owner.getId().equals(memberId);
     }

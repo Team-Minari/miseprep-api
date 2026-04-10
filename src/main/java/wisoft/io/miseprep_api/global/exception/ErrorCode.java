@@ -38,6 +38,9 @@ public enum ErrorCode {
     CART_BUDGET_EXCEEDED(HttpStatus.BAD_REQUEST, "예산을 초과합니다"),
     INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "수량은 1 이상이어야 합니다"),
     INVALID_BUDGET(HttpStatus.BAD_REQUEST, "예산은 0보다 커야 합니다"),
+    TRANSFER_TO_NON_PARTICIPANT(HttpStatus.BAD_REQUEST, "장바구니 참여자에게만 소유권을 이전할 수 있습니다"),
+    OWNER_CANNOT_LEAVE_CART(HttpStatus.FORBIDDEN, "소유자는 장바구니를 나갈 수 없습니다. 소유권을 이전한 후 나가주세요."),
+    CART_OWNER_CANNOT_BE_KICKED(HttpStatus.FORBIDDEN, "소유자는 강퇴할 수 없습니다."),
 
     // Invitation
     INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 초대입니다"),

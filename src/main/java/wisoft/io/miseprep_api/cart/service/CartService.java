@@ -1,11 +1,14 @@
 package wisoft.io.miseprep_api.cart.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wisoft.io.miseprep_api.cart.dto.request.*;
-import wisoft.io.miseprep_api.cart.dto.response.*;
+import wisoft.io.miseprep_api.cart.dto.response.CartDetailResponse;
+import wisoft.io.miseprep_api.cart.dto.response.CartItemResponse;
+import wisoft.io.miseprep_api.cart.dto.response.CartResponse;
+import wisoft.io.miseprep_api.cart.dto.response.OwnerTransferResponse;
+import wisoft.io.miseprep_api.cart.dto.response.ParticipantResponse;
 import wisoft.io.miseprep_api.cart.entity.Cart;
 import wisoft.io.miseprep_api.cart.entity.CartItem;
 import wisoft.io.miseprep_api.cart.entity.CartParticipant;
@@ -37,7 +40,6 @@ public class CartService {
     private final EmailInvitationRepository emailInvitationRepository;
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
-    private final SimpMessagingTemplate messagingTemplate;
 
     public CartResponse createCart(Long memberId, CreateCartRequest request) {
         if (request.budget() != null && request.budget() <= 0) {
@@ -82,27 +84,35 @@ public class CartService {
                 .toList();
     }
 
-    public CartResponse updateCartName(Long memberId, Long cartId, UpdateCartNameRequest request) {
+    public CartResponse updateCartSetting(Long memberId, Long cartId, UpdateCartSettingRequest request) {
         Cart cart = findCartAsOwner(memberId, cartId);
-        cart.updateName(request.name());
-        return CartResponse.from(cart);
-    }
 
-    public CartResponse updateCartBudget(Long memberId, Long cartId, UpdateCartBudgetRequest request) {
-        if (request.budget() != null && request.budget() <= 0) {
-            throw new BusinessException(ErrorCode.INVALID_BUDGET);
-        }
-        Cart cart = findCartAsOwner(memberId, cartId);
         if (request.budget() != null) {
-            int currentTotal = cartItemRepository.findAllByCartId(cartId).stream()
-                    .mapToInt(item -> item.getProduct().getPrice() * item.getQuantity())
-                    .sum();
-            if (currentTotal > request.budget()) {
-                throw new BusinessException(ErrorCode.CART_BUDGET_EXCEEDED);
+            if (request.budget() < 0) {
+                throw new BusinessException(ErrorCode.INVALID_BUDGET);
+            }
+
+            if (request.budget() == 0) {
+                cart.updateBudget(null);
+            }
+
+            if (request.budget() > 0) {
+                int currentTotal = cartItemRepository.findAllByCartId(cartId).stream()
+                        .mapToInt(item -> item.getProduct().getPrice() * item.getQuantity())
+                        .sum();
+
+                if (currentTotal > request.budget()) {
+                    throw new BusinessException(ErrorCode.CART_BUDGET_EXCEEDED);
+                }
+
+                cart.updateBudget(request.budget());
             }
         }
-        cart.updateBudget(request.budget());
-        broadcastBudget(cart, cartId);
+
+        if (request.purpose() != null) cart.updatePurpose(request.purpose());
+        if (request.cartName() != null) cart.updateName(request.cartName());
+        if (request.isPublic() != null) cart.updateIsPublic(request.isPublic());
+
         return CartResponse.from(cart);
     }
 
@@ -117,13 +127,12 @@ public class CartService {
 
     public void leaveCart(Long memberId, Long cartId) {
         Cart cart = findCartAsParticipant(memberId, cartId);
+        if (cart.isOwner(memberId)) {
+            throw new BusinessException(ErrorCode.OWNER_CANNOT_LEAVE_CART);
+        }
         cartItemRepository.findAllByCheckerId(memberId).stream()
                 .filter(item -> item.getCart().getId().equals(cartId))
                 .forEach(CartItem::uncheck);
-        if (cart.isOwner(memberId)) {
-            deleteCart(memberId, cartId);
-            return;
-        }
         CartParticipant participant = cartParticipantRepository.findByCartIdAndMemberId(cartId, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_ACCESS_DENIED));
         cartParticipantRepository.delete(participant);
@@ -157,45 +166,64 @@ public class CartService {
                     validateBudget(cart, cartId, product.getPrice(), request.quantity());
                     return CartItemResponse.from(cartItemRepository.save(CartItem.create(cart, product, request.quantity())));
                 });
-        broadcastItem(CartItemBroadcast.added(result), cartId);
-        broadcastBudget(cart, cartId);
         return result;
     }
 
     public CartItemResponse updateItem(Long memberId, Long cartId, Long itemId, UpdateCartItemRequest request) {
-        if (request.quantity() < 1) throw new BusinessException(ErrorCode.INVALID_QUANTITY);
+        if (request.quantity() < 1) {
+            throw new BusinessException(ErrorCode.INVALID_QUANTITY);
+        }
+
         Cart cart = findCartAsParticipant(memberId, cartId);
         CartItem item = findCartItem(cartId, itemId);
-        if (item.isChecked()) throw new BusinessException(ErrorCode.CART_ITEM_ALREADY_CHECKED);
         int quantityDiff = request.quantity() - item.getQuantity();
-        if (quantityDiff > 0) validateBudget(cart, cartId, item.getProduct().getPrice(), quantityDiff);
+
+        if (quantityDiff > 0) {
+            validateBudget(cart, cartId, item.getProduct().getPrice(), quantityDiff);
+        }
+
         item.updateQuantity(request.quantity());
-        CartItemResponse result = CartItemResponse.from(item);
-        broadcastItem(CartItemBroadcast.updated(result), cartId);
-        broadcastBudget(cart, cartId);
-        return result;
+        return CartItemResponse.from(item);
     }
 
     public void deleteItem(Long memberId, Long cartId, Long itemId) {
-        Cart cart = findCartAsParticipant(memberId, cartId);
+        findCartAsParticipant(memberId, cartId);
         CartItem item = findCartItem(cartId, itemId);
-        if (item.isChecked()) throw new BusinessException(ErrorCode.CART_ITEM_ALREADY_CHECKED);
-        CartItemResponse result = CartItemResponse.from(item);
         cartItemRepository.delete(item);
-        broadcastItem(CartItemBroadcast.deleted(result), cartId);
-        broadcastBudget(cart, cartId);
+    }
+
+    public void deleteAllItems(Long memberId, Long cartId) {
+        findCartAsParticipant(memberId, cartId);
+        cartItemRepository.deleteAllByCartId(cartId);
+    }
+
+    public void kickParticipant(Long memberId, Long cartId, Long targetMemberId) {
+        Cart cart = findCartAsOwner(memberId, cartId);
+        if (cart.isOwner(targetMemberId)) {
+            throw new BusinessException(ErrorCode.CART_OWNER_CANNOT_BE_KICKED);
+        }
+        CartParticipant participant = cartParticipantRepository.findByCartIdAndMemberId(cartId, targetMemberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_ACCESS_DENIED));
+        cartItemRepository.findAllByCheckerId(targetMemberId).stream()
+                .filter(item -> item.getCart().getId().equals(cartId))
+                .forEach(CartItem::uncheck);
+        cartParticipantRepository.delete(participant);
     }
 
     public CartItemResponse checkItem(Long memberId, Long cartId, Long itemId) {
         findCartAsParticipant(memberId, cartId);
+
         CartItem item = cartItemRepository.findByIdAndCartIdWithLock(itemId, cartId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND));
-        if (item.isChecked()) throw new BusinessException(ErrorCode.CART_ITEM_ALREADY_CHECKED);
+
+        if (item.isChecked()) {
+            throw new BusinessException(ErrorCode.CART_ITEM_ALREADY_CHECKED);
+        }
+
         Member member = findMember(memberId);
         item.check(member);
-        CartItemResponse result = CartItemResponse.from(item);
-        broadcastItem(CartItemBroadcast.checked(result), cartId);
-        return result;
+
+        return CartItemResponse.from(item);
     }
 
     public CartItemResponse uncheckItem(Long memberId, Long cartId, Long itemId) {
@@ -204,9 +232,21 @@ public class CartService {
         if (!item.isChecked()) throw new BusinessException(ErrorCode.CART_ITEM_NOT_CHECKED);
         if (!item.getChecker().getId().equals(memberId)) throw new BusinessException(ErrorCode.CART_ACCESS_DENIED);
         item.uncheck();
-        CartItemResponse result = CartItemResponse.from(item);
-        broadcastItem(CartItemBroadcast.unchecked(result), cartId);
-        return result;
+        return CartItemResponse.from(item);
+    }
+
+    public OwnerTransferResponse transferOwner(Long memberId, Long cartId, OwnerTransferRequest request) {
+        Cart cart = findCartAsOwner(memberId, cartId);
+
+        // 새 소유자가 장바구니 참여자인지 체크하는 로직
+        if (!cartParticipantRepository.existsByCartIdAndMemberId(cartId, request.newOwnerId())) {
+            throw new BusinessException(ErrorCode.TRANSFER_TO_NON_PARTICIPANT);
+        }
+
+        Member newOwner = findMember(request.newOwnerId());
+        cart.transferOwner(newOwner);
+
+        return new OwnerTransferResponse(memberId, newOwner.getId(), newOwner.getUsername());
     }
 
     private Cart findCart(Long cartId) {
@@ -250,17 +290,4 @@ public class CartService {
         }
     }
 
-    private void broadcastItem(CartItemBroadcast broadcast, Long cartId) {
-        messagingTemplate.convertAndSend("/topic/carts/" + cartId + "/items", broadcast);
-    }
-
-    private void broadcastBudget(Cart cart, Long cartId) {
-        int totalAmount = cartItemRepository.findAllByCartId(cartId).stream()
-                .mapToInt(item -> item.getProduct().getPrice() * item.getQuantity())
-                .sum();
-        messagingTemplate.convertAndSend(
-                "/topic/carts/" + cartId + "/budget",
-                CartBudgetResponse.of(cart.getBudget(), totalAmount)
-        );
-    }
 }

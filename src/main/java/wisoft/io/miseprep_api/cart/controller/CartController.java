@@ -93,7 +93,7 @@ public class CartController {
     }
 
     @Operation(summary = "장바구니 나가기", description = "소유자는 나갈 수 없습니다. 소유권을 먼저 이전한 후 나가주세요.")
-    @DeleteMapping("/{cartId}/participants/me")
+    @DeleteMapping("/{cartId}/leave")
     public ResponseEntity<ApiResponse<Void>> leaveCart(
             @AuthenticationPrincipal Long memberId,
             @PathVariable Long cartId) {

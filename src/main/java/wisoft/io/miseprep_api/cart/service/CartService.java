@@ -1,6 +1,7 @@
 package wisoft.io.miseprep_api.cart.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wisoft.io.miseprep_api.cart.dto.request.*;
@@ -12,6 +13,8 @@ import wisoft.io.miseprep_api.cart.dto.response.ParticipantResponse;
 import wisoft.io.miseprep_api.cart.entity.Cart;
 import wisoft.io.miseprep_api.cart.entity.CartItem;
 import wisoft.io.miseprep_api.cart.entity.CartParticipant;
+import wisoft.io.miseprep_api.cart.event.*;
+import wisoft.io.miseprep_api.cart.event.data.*;
 import wisoft.io.miseprep_api.cart.repository.CartItemRepository;
 import wisoft.io.miseprep_api.cart.repository.CartParticipantRepository;
 import wisoft.io.miseprep_api.cart.repository.CartRepository;
@@ -40,6 +43,7 @@ public class CartService {
     private final EmailInvitationRepository emailInvitationRepository;
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public CartResponse createCart(Long memberId, CreateCartRequest request) {
         if (request.budget() != null && request.budget() <= 0) {
@@ -86,6 +90,7 @@ public class CartService {
 
     public CartResponse updateCartSetting(Long memberId, Long cartId, UpdateCartSettingRequest request) {
         Cart cart = findCartAsOwner(memberId, cartId);
+        Member member = findMember(memberId);
 
         if (request.budget() != null) {
             if (request.budget() < 0) {
@@ -113,11 +118,19 @@ public class CartService {
         if (request.cartName() != null) cart.updateName(request.cartName());
         if (request.isPublic() != null) cart.updateIsPublic(request.isPublic());
 
+        eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_SETTINGS_UPDATED,
+                new CartSettingsUpdatedEventData(cartId, cart.getName(), cart.isPublic(), cart.getPurpose(), cart.getBudget(), member.getUsername())));
+
         return CartResponse.from(cart);
     }
 
     public void deleteCart(Long memberId, Long cartId) {
         Cart cart = findCartAsOwner(memberId, cartId);
+        String ownerName = cart.getOwner().getUsername();
+
+        eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_DELETED,
+                new CartDeletedEventData(cartId, ownerName)));
+
         emailInvitationRepository.deleteAllByCartId(cartId);
         linkInvitationRepository.deleteByCartId(cartId);
         cartItemRepository.deleteAllByCartId(cartId);
@@ -130,12 +143,16 @@ public class CartService {
         if (cart.isOwner(memberId)) {
             throw new BusinessException(ErrorCode.OWNER_CANNOT_LEAVE_CART);
         }
+        Member member = findMember(memberId);
         cartItemRepository.findAllByCheckerId(memberId).stream()
                 .filter(item -> item.getCart().getId().equals(cartId))
                 .forEach(CartItem::uncheck);
         CartParticipant participant = cartParticipantRepository.findByCartIdAndMemberId(cartId, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CART_ACCESS_DENIED));
         cartParticipantRepository.delete(participant);
+
+        eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_PARTICIPANT_LEFT,
+                new ParticipantLeftEventData(cartId, member.getId(), "LEAVE")));
     }
 
     public Long joinByLink(Long memberId, String token) {
@@ -147,12 +164,17 @@ public class CartService {
         }
         Member member = findMember(memberId);
         cartParticipantRepository.save(CartParticipant.create(cart, member));
+
+        eventPublisher.publishEvent(new CartEvent(cart.getId(), CartEventType.CART_PARTICIPANT_JOINED,
+                new ParticipantJoinedEventData(cart.getId(), member.getId(), member.getUsername(), member.getEmail(), "MEMBER", member.getProfileImageUrl())));
+
         return cart.getId();
     }
 
     public CartItemResponse addItem(Long memberId, Long cartId, AddCartItemRequest request) {
         if (request.quantity() < 1) throw new BusinessException(ErrorCode.INVALID_QUANTITY);
         Cart cart = findCartAsParticipant(memberId, cartId);
+        Member member = findMember(memberId);
         Product product = productRepository.findById(request.productId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
         CartItemResponse result = cartItemRepository.findByCartIdAndProductId(cartId, request.productId())
@@ -166,6 +188,12 @@ public class CartService {
                     validateBudget(cart, cartId, product.getPrice(), request.quantity());
                     return CartItemResponse.from(cartItemRepository.save(CartItem.create(cart, product, request.quantity())));
                 });
+
+        eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_ITEM_ADDED,
+                new ItemAddedEventData(cartId, result.id(), product.getId(), product.getName(), product.getPrice(),
+                        product.getImageUrl(), product.getDescription(), product.getCategory(), result.quantity(),
+                        member.getUsername(), member.getProfileImageUrl())));
+
         return result;
     }
 
@@ -188,13 +216,24 @@ public class CartService {
 
     public void deleteItem(Long memberId, Long cartId, Long itemId) {
         findCartAsParticipant(memberId, cartId);
+        Member member = findMember(memberId);
         CartItem item = findCartItem(cartId, itemId);
         cartItemRepository.delete(item);
+
+        eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_ITEM_DELETED,
+                new ItemDeletedEventData(cartId, itemId, member.getUsername())));
     }
 
     public void deleteAllItems(Long memberId, Long cartId) {
         findCartAsParticipant(memberId, cartId);
+        Member member = findMember(memberId);
+        List<Long> itemIds = cartItemRepository.findAllByCartId(cartId).stream()
+                .map(CartItem::getId)
+                .toList();
         cartItemRepository.deleteAllByCartId(cartId);
+
+        eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_ITEM_BULK_DELETED,
+                new ItemBulkDeletedEventData(cartId, itemIds, member.getUsername())));
     }
 
     public void kickParticipant(Long memberId, Long cartId, Long targetMemberId) {
@@ -208,6 +247,9 @@ public class CartService {
                 .filter(item -> item.getCart().getId().equals(cartId))
                 .forEach(CartItem::uncheck);
         cartParticipantRepository.delete(participant);
+
+        eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_PARTICIPANT_LEFT,
+                new ParticipantLeftEventData(cartId, targetMemberId, "KICK")));
     }
 
     public CartItemResponse checkItem(Long memberId, Long cartId, Long itemId) {
@@ -238,13 +280,15 @@ public class CartService {
     public OwnerTransferResponse transferOwner(Long memberId, Long cartId, OwnerTransferRequest request) {
         Cart cart = findCartAsOwner(memberId, cartId);
 
-        // 새 소유자가 장바구니 참여자인지 체크하는 로직
         if (!cartParticipantRepository.existsByCartIdAndMemberId(cartId, request.newOwnerId())) {
             throw new BusinessException(ErrorCode.TRANSFER_TO_NON_PARTICIPANT);
         }
 
         Member newOwner = findMember(request.newOwnerId());
         cart.transferOwner(newOwner);
+
+        eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_OWNER_TRANSFERRED,
+                new OwnerTransferredEventData(cartId, memberId, newOwner.getId())));
 
         return new OwnerTransferResponse(memberId, newOwner.getId(), newOwner.getUsername());
     }

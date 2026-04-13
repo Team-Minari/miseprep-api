@@ -1,0 +1,12 @@
+package wisoft.io.miseprep_api.cart.event;
+
+public enum CartEventType {
+    CART_ITEM_ADDED,
+    CART_ITEM_DELETED,
+    CART_ITEM_BULK_DELETED,
+    CART_PARTICIPANT_JOINED,
+    CART_PARTICIPANT_LEFT,
+    CART_OWNER_TRANSFERRED,
+    CART_SETTINGS_UPDATED,
+    CART_DELETED
+}

@@ -5,8 +5,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wisoft.io.miseprep_api.auth.repository.RefreshTokenRepository;
 import wisoft.io.miseprep_api.cart.repository.CartItemRepository;
+import wisoft.io.miseprep_api.cart.repository.CartParticipantRepository;
+import wisoft.io.miseprep_api.cart.repository.CartRepository;
 import wisoft.io.miseprep_api.global.exception.BusinessException;
 import wisoft.io.miseprep_api.global.exception.ErrorCode;
+import wisoft.io.miseprep_api.invitation.repository.EmailInvitationRepository;
+import wisoft.io.miseprep_api.invitation.repository.LinkInvitationRepository;
 import wisoft.io.miseprep_api.member.dto.request.UpdateMemberRequest;
 import wisoft.io.miseprep_api.member.dto.response.MemberResponse;
 import wisoft.io.miseprep_api.member.entity.Member;
@@ -19,7 +23,11 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
+    private final CartParticipantRepository cartParticipantRepository;
+    private final LinkInvitationRepository linkInvitationRepository;
+    private final EmailInvitationRepository emailInvitationRepository;
 
     @Transactional(readOnly = true)
     public MemberResponse getMe(Long memberId) {
@@ -35,7 +43,20 @@ public class MemberService {
 
     public void deleteMe(Long memberId) {
         Member member = findActiveMember(memberId);
+
         cartItemRepository.findAllByCheckerId(memberId).forEach(item -> item.uncheck());
+
+        cartRepository.findAllByOwnerId(memberId).forEach(cart -> {
+            emailInvitationRepository.deleteAllByCartId(cart.getId());
+            linkInvitationRepository.deleteByCartId(cart.getId());
+            cartItemRepository.deleteAllByCartId(cart.getId());
+            cartParticipantRepository.deleteAllByCartId(cart.getId());
+            cartRepository.delete(cart);
+        });
+
+        cartParticipantRepository.deleteAllByMemberId(memberId);
+        emailInvitationRepository.deleteAllByInviterId(memberId);
+        emailInvitationRepository.deleteAllByInviteeId(memberId);
         refreshTokenRepository.deleteByMemberId(memberId);
         memberRepository.delete(member);
     }

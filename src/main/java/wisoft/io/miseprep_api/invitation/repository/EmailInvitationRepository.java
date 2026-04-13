@@ -18,4 +18,8 @@ public interface EmailInvitationRepository extends JpaRepository<EmailInvitation
     Optional<EmailInvitation> findByIdAndInviterId(Long id, Long inviterId);
 
     void deleteAllByCartId(Long cartId);
+
+    void deleteAllByInviteeId(Long inviteeId);
+
+    void deleteAllByInviterId(Long inviterId);
 }

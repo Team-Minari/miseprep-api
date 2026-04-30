@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import wisoft.io.miseprep_api.cart.entity.enums.CartType;
 import wisoft.io.miseprep_api.global.entity.BaseEntity;
 import wisoft.io.miseprep_api.member.entity.Member;
 
@@ -33,14 +34,31 @@ public class Cart extends BaseEntity {
     @Column
     private Integer budget;
 
-    public static Cart create(Member owner, String name, String purpose, boolean isPublic, Integer budget) {
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CartType cartType;
+
+    @Column(nullable = false)
+    private int likeCount = 0;
+
+    public static Cart create(Member owner, String name, String purpose, boolean isPublic, Integer budget, CartType cartType) {
         Cart cart = new Cart();
         cart.owner = owner;
         cart.name = name;
         cart.purpose = purpose;
         cart.isPublic = isPublic;
         cart.budget = budget;
+        cart.cartType = cartType;
+        cart.likeCount = 0;
         return cart;
+    }
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) this.likeCount--;
     }
 
     public void updateName(String name) {

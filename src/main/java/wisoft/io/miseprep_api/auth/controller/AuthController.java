@@ -10,6 +10,8 @@ import wisoft.io.miseprep_api.auth.dto.request.TokenRefreshRequest;
 import wisoft.io.miseprep_api.auth.dto.response.AuthResponse;
 import wisoft.io.miseprep_api.auth.service.AuthService;
 import wisoft.io.miseprep_api.global.dto.ApiResponse;
+import wisoft.io.miseprep_api.global.exception.BusinessException;
+import wisoft.io.miseprep_api.global.exception.ErrorCode;
 
 import java.net.URI;
 
@@ -26,18 +28,21 @@ public class AuthController {
 
     @Operation(summary = "카카오 로그인", description = "브라우저에서 직접 접속 — 카카오 로그인 페이지로 리다이렉트됩니다.")
     @GetMapping("/oauth/kakao/authorize")
-    public ResponseEntity<Void> authorize() {
+    public ResponseEntity<Void> authorize(@RequestParam String redirectUri) {
+        if (!kakaoProperties.allowedRedirectUris().contains(redirectUri)) {
+            throw new BusinessException(ErrorCode.INVALID_REDIRECT_URI);
+        }
         String kakaoLoginUrl = KAKAO_AUTH_URL
                 + "?client_id=" + kakaoProperties.clientId()
-                + "&redirect_uri=" + kakaoProperties.redirectUri()
+                + "&redirect_uri=" + redirectUri
                 + "&response_type=code";
         return ResponseEntity.status(302).location(URI.create(kakaoLoginUrl)).build();
     }
 
     @Operation(summary = "카카오 로그인 콜백", description = "카카오 서버가 자동 호출 — 직접 호출 불필요")
     @GetMapping("/oauth/kakao/callback")
-    public ResponseEntity<ApiResponse<AuthResponse>> callback(@RequestParam String code) {
-        AuthResponse data = authService.login(code);
+    public ResponseEntity<ApiResponse<AuthResponse>> callback(@RequestParam String code, @RequestParam String redirectUri) {
+        AuthResponse data = authService.login(code, redirectUri);
         ApiResponse<AuthResponse> response = ApiResponse.of(data, "로그인이 완료되었습니다.");
         return ResponseEntity.ok(response);
     }

@@ -50,7 +50,7 @@ public class CartService {
             throw new BusinessException(ErrorCode.INVALID_BUDGET);
         }
         Member member = findMember(memberId);
-        Cart cart = cartRepository.save(Cart.create(member, request.name(), request.purpose(), request.isPublic(), request.budget()));
+        Cart cart = cartRepository.save(Cart.create(member, request.name(), request.purpose(), request.isPublic(), request.budget(), request.cartType()));
         cartParticipantRepository.save(CartParticipant.create(cart, member));
         linkInvitationRepository.save(LinkInvitation.create(cart, UUID.randomUUID().toString()));
         return CartResponse.from(cart);

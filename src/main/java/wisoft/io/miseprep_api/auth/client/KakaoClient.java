@@ -23,12 +23,12 @@ public class KakaoClient {
     private final KakaoProperties kakaoProperties;
     private final RestClient restClient = RestClient.create();
 
-    public String getAccessToken(String code) {
+    public String getAccessToken(String code, String redirectUri) {
         try {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("grant_type", "authorization_code");
             params.add("client_id", kakaoProperties.clientId());
-            params.add("redirect_uri", kakaoProperties.redirectUri());
+            params.add("redirect_uri", redirectUri);
             params.add("code", code);
 
             KakaoTokenResponse response = restClient.post()

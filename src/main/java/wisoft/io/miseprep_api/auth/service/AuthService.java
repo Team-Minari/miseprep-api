@@ -28,8 +28,8 @@ public class AuthService {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public AuthResponse login(String code) {
-        String kakaoAccessToken = kakaoClient.getAccessToken(code);
+    public AuthResponse login(String code, String redirectUri) {
+        String kakaoAccessToken = kakaoClient.getAccessToken(code, redirectUri);
         KakaoUserResponse kakaoUser = kakaoClient.getUserInfo(kakaoAccessToken);
 
         Member member = memberRepository

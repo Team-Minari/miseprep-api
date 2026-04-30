@@ -6,6 +6,7 @@ spring:
   application:
     name: miseprep-api
 
+
   profiles:
     active: local
 
@@ -27,5 +28,7 @@ jwt:
 
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
-  redirect-uri: ${KAKAO_REDIRECT_URI}
+  allowed-redirect-uris:
+    - ${KAKAO_REDIRECT_URI_LOCAL}
+    - ${KAKAO_REDIRECT_URI_PROD}
 

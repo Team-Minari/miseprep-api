@@ -84,4 +84,8 @@ public class Cart extends BaseEntity {
     public boolean isOwner(Long memberId) {
         return this.owner.getId().equals(memberId);
     }
+
+    public boolean isPersonal() {
+        return this.cartType == CartType.PERSONAL;
+    }
 }

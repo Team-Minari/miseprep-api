@@ -14,6 +14,8 @@ import wisoft.io.miseprep_api.global.exception.BusinessException;
 import wisoft.io.miseprep_api.global.exception.ErrorCode;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Tag(name = "Auth", description = "인증 API")
 @RestController
@@ -34,7 +36,7 @@ public class AuthController {
         }
         String kakaoLoginUrl = KAKAO_AUTH_URL
                 + "?client_id=" + kakaoProperties.clientId()
-                + "&redirect_uri=" + redirectUri
+                + "&redirect_uri=" + URLEncoder.encode(redirectUri, StandardCharsets.UTF_8)
                 + "&response_type=code";
         return ResponseEntity.status(302).location(URI.create(kakaoLoginUrl)).build();
     }

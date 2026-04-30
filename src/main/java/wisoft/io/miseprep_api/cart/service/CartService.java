@@ -52,7 +52,9 @@ public class CartService {
         Member member = findMember(memberId);
         Cart cart = cartRepository.save(Cart.create(member, request.name(), request.purpose(), request.isPublic(), request.budget(), request.cartType()));
         cartParticipantRepository.save(CartParticipant.create(cart, member));
-        linkInvitationRepository.save(LinkInvitation.create(cart, UUID.randomUUID().toString()));
+        if (!cart.isPersonal()) {
+            linkInvitationRepository.save(LinkInvitation.create(cart, UUID.randomUUID().toString()));
+        }
         return CartResponse.from(cart);
     }
 
@@ -159,6 +161,7 @@ public class CartService {
         LinkInvitation linkInvitation = linkInvitationRepository.findByToken(token)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_LINK_TOKEN));
         Cart cart = linkInvitation.getCart();
+        if (cart.isPersonal()) throw new BusinessException(ErrorCode.PERSONAL_CART_INVITE_NOT_ALLOWED);
         if (cartParticipantRepository.existsByCartIdAndMemberId(cart.getId(), memberId)) {
             throw new BusinessException(ErrorCode.ALREADY_CART_PARTICIPANT);
         }

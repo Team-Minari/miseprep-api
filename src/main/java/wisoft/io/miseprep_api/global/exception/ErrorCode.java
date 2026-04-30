@@ -19,6 +19,7 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다"),
     UNSUPPORTED_OAUTH_PROVIDER(HttpStatus.BAD_REQUEST, "지원하지 않는 OAuth 제공자입니다"),
     INVALID_KAKAO_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 카카오 토큰입니다"),
+    PERSONAL_CART_INVITE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "개인 장바구니는 초대할 수 없습니다"),
     INVALID_REDIRECT_URI(HttpStatus.BAD_REQUEST, "허용되지 않은 redirect URI입니다"),
 
     // Member

@@ -32,6 +32,7 @@ public class InvitationService {
 
     public InvitationResponse sendInvitation(Long inviterId, Long cartId, SendInvitationRequest request) {
         Cart cart = findCartAsParticipant(inviterId, cartId);
+        if (cart.isPersonal()) throw new BusinessException(ErrorCode.PERSONAL_CART_INVITE_NOT_ALLOWED);
         Member invitee = memberRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 

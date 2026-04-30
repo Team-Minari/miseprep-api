@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import wisoft.io.miseprep_api.cart.dto.request.*;
 import wisoft.io.miseprep_api.cart.dto.response.*;
@@ -27,7 +28,7 @@ public class CartController {
     @PostMapping
     public ResponseEntity<ApiResponse<CartResponse>> createCart(
             @AuthenticationPrincipal Long memberId,
-            @RequestBody CreateCartRequest request) {
+            @Valid @RequestBody CreateCartRequest request) {
         CartResponse data = cartService.createCart(memberId, request);
         ApiResponse<CartResponse> response = ApiResponse.of(data, "장바구니를 생성했습니다.");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

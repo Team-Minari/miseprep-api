@@ -30,7 +30,7 @@ public class AuthController {
 
     @Operation(summary = "카카오 로그인", description = "브라우저에서 직접 접속 — 카카오 로그인 페이지로 리다이렉트됩니다.")
     @GetMapping("/oauth/kakao/authorize")
-    public ResponseEntity<Void> authorize(@RequestParam String redirectUri) {
+    public ResponseEntity<Void> authorize(@RequestParam("redirect_uri") String redirectUri) {
         if (!kakaoProperties.allowedRedirectUris().contains(redirectUri)) {
             throw new BusinessException(ErrorCode.INVALID_REDIRECT_URI);
         }
@@ -43,7 +43,7 @@ public class AuthController {
 
     @Operation(summary = "카카오 로그인 콜백", description = "카카오 서버가 자동 호출 — 직접 호출 불필요")
     @GetMapping("/oauth/kakao/callback")
-    public ResponseEntity<ApiResponse<AuthResponse>> callback(@RequestParam String code, @RequestParam String redirectUri) {
+    public ResponseEntity<ApiResponse<AuthResponse>> callback(@RequestParam String code, @RequestParam("redirect_uri") String redirectUri) {
         AuthResponse data = authService.login(code, redirectUri);
         ApiResponse<AuthResponse> response = ApiResponse.of(data, "로그인이 완료되었습니다.");
         return ResponseEntity.ok(response);

@@ -35,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/logout").authenticated()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/products/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/carts").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
                         .anyRequest().authenticated()
                 )

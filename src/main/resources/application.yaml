@@ -32,3 +32,6 @@ kakao:
     - ${KAKAO_REDIRECT_URI_LOCAL}
     - ${KAKAO_REDIRECT_URI_PROD}
 
+openai:
+  api-key: ${OPENAI_API_KEY}
+

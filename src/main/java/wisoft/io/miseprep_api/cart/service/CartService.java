@@ -51,7 +51,7 @@ public class CartService {
             throw new BusinessException(ErrorCode.INVALID_BUDGET);
         }
         Member member = findMember(memberId);
-        Cart cart = cartRepository.save(Cart.create(member, request.name(), request.category(), request.isPublic(), request.budget(), request.cartType()));
+        Cart cart = cartRepository.save(Cart.create(member, request.name(), request.category(), request.purpose(), request.isPublic(), request.budget(), request.cartType()));
         cartParticipantRepository.save(CartParticipant.create(cart, member));
         if (!cart.isPersonal()) {
             linkInvitationRepository.save(LinkInvitation.create(cart, UUID.randomUUID().toString()));
@@ -130,11 +130,12 @@ public class CartService {
         }
 
         if (request.category() != null) cart.updateCategory(request.category());
+        if (request.purpose() != null) cart.updatePurpose(request.purpose());
         if (request.cartName() != null) cart.updateName(request.cartName());
         if (request.isPublic() != null) cart.updateIsPublic(request.isPublic());
 
         eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_SETTINGS_UPDATED,
-                new CartSettingsUpdatedEventData(cartId, cart.getName(), cart.isPublic(), cart.getCategory(), cart.getBudget(), member.getUsername())));
+                new CartSettingsUpdatedEventData(cartId, cart.getName(), cart.isPublic(), cart.getCategory(), cart.getPurpose(), cart.getBudget(), member.getUsername())));
 
         return CartResponse.from(cart);
     }

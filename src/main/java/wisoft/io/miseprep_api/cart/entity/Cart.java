@@ -30,6 +30,9 @@ public class Cart extends BaseEntity {
     @Column(nullable = false)
     private Category category;
 
+    @Column
+    private String purpose;
+
     @Column(nullable = false)
     private boolean isPublic;
 
@@ -40,11 +43,12 @@ public class Cart extends BaseEntity {
     @Column(nullable = false)
     private CartType cartType;
 
-    public static Cart create(Member owner, String name, Category category, boolean isPublic, Integer budget, CartType cartType) {
+    public static Cart create(Member owner, String name, Category category, String purpose, boolean isPublic, Integer budget, CartType cartType) {
         Cart cart = new Cart();
         cart.owner = owner;
         cart.name = name;
         cart.category = category;
+        cart.purpose = purpose;
         cart.isPublic = isPublic;
         cart.budget = budget;
         cart.cartType = cartType;
@@ -61,6 +65,10 @@ public class Cart extends BaseEntity {
 
     public void updateCategory(Category category) {
         this.category = category;
+    }
+
+    public void updatePurpose(String purpose) {
+        this.purpose = purpose;
     }
 
     public void updateIsPublic(boolean isPublic) {

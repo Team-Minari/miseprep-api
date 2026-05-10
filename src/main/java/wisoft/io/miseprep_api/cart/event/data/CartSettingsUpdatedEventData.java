@@ -8,6 +8,7 @@ public record CartSettingsUpdatedEventData(
         @JsonProperty("cart_name") String cartName,
         @JsonProperty("is_public") Boolean isPublic,
         Category category,
+        String purpose,
         Integer budget,
         @JsonProperty("editor_name") String editorName
 ) {

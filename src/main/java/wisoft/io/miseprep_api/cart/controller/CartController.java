@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import wisoft.io.miseprep_api.cart.dto.request.*;
 import wisoft.io.miseprep_api.cart.dto.response.*;
+import wisoft.io.miseprep_api.cart.service.CartSearchService;
 import wisoft.io.miseprep_api.cart.service.CartService;
 import wisoft.io.miseprep_api.global.dto.ApiResponse;
 import wisoft.io.miseprep_api.global.enums.Category;
@@ -24,6 +25,7 @@ import java.util.List;
 public class CartController {
 
     private final CartService cartService;
+    private final CartSearchService cartSearchService;
 
     @Operation(summary = "장바구니 생성")
     @PostMapping
@@ -33,6 +35,14 @@ public class CartController {
         CartResponse data = cartService.createCart(memberId, request);
         ApiResponse<CartResponse> response = ApiResponse.of(data, "장바구니를 생성했습니다.");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "자연어 장바구니 검색", description = "자연어 쿼리로 관련 공개 장바구니를 검색합니다.")
+    @PostMapping("/search")
+    public ResponseEntity<ApiResponse<List<CartResponse>>> searchCarts(@RequestBody CartSearchRequest request) {
+        List<CartResponse> data = cartSearchService.search(request.query());
+        ApiResponse<List<CartResponse>> response = ApiResponse.of(data, "장바구니 검색 결과입니다.");
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "공개 장바구니 목록 조회", description = "category로 필터링 가능. 미입력 시 전체 공개 장바구니 반환")

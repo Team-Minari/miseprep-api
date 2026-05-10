@@ -6,6 +6,7 @@ public record UpdateCartSettingRequest(
         String cartName,
         Boolean isPublic,
         Category category,
+        String purpose,
         Integer budget
 ) {
 }

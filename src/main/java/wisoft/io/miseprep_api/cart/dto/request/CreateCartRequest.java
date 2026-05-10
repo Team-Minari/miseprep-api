@@ -8,6 +8,7 @@ import wisoft.io.miseprep_api.global.enums.Category;
 public record CreateCartRequest(
         String name,
         @NotNull Category category,
+        String purpose,
         @JsonProperty("is_public") boolean isPublic,
         Integer budget,
         @NotNull @JsonProperty("cart_type") CartType cartType

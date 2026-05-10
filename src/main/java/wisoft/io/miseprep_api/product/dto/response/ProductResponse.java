@@ -1,5 +1,6 @@
 package wisoft.io.miseprep_api.product.dto.response;
 
+import wisoft.io.miseprep_api.global.enums.Category;
 import wisoft.io.miseprep_api.product.entity.Product;
 
 public record ProductResponse(
@@ -8,7 +9,7 @@ public record ProductResponse(
         String description,
         int price,
         String imageUrl,
-        String category
+        Category category
 ) {
     public static ProductResponse from(Product product) {
         return new ProductResponse(

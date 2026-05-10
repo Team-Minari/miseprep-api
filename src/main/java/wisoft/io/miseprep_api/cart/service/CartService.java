@@ -20,6 +20,7 @@ import wisoft.io.miseprep_api.cart.repository.CartParticipantRepository;
 import wisoft.io.miseprep_api.cart.repository.CartRepository;
 import wisoft.io.miseprep_api.global.exception.BusinessException;
 import wisoft.io.miseprep_api.global.exception.ErrorCode;
+import wisoft.io.miseprep_api.global.enums.Category;
 import wisoft.io.miseprep_api.invitation.entity.LinkInvitation;
 import wisoft.io.miseprep_api.invitation.repository.EmailInvitationRepository;
 import wisoft.io.miseprep_api.invitation.repository.LinkInvitationRepository;
@@ -50,7 +51,7 @@ public class CartService {
             throw new BusinessException(ErrorCode.INVALID_BUDGET);
         }
         Member member = findMember(memberId);
-        Cart cart = cartRepository.save(Cart.create(member, request.name(), request.purpose(), request.isPublic(), request.budget(), request.cartType()));
+        Cart cart = cartRepository.save(Cart.create(member, request.name(), request.category(), request.isPublic(), request.budget(), request.cartType()));
         cartParticipantRepository.save(CartParticipant.create(cart, member));
         if (!cart.isPersonal()) {
             linkInvitationRepository.save(LinkInvitation.create(cart, UUID.randomUUID().toString()));
@@ -61,6 +62,18 @@ public class CartService {
     @Transactional(readOnly = true)
     public List<CartResponse> getMyCarts(Long memberId) {
         return cartRepository.findAllByMemberId(memberId).stream()
+                .map(CartResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CartResponse> getPublicCarts(Category category) {
+        if (category != null) {
+            return cartRepository.findAllByIsPublicTrueAndCategory(category).stream()
+                    .map(CartResponse::from)
+                    .toList();
+        }
+        return cartRepository.findAllByIsPublicTrue().stream()
                 .map(CartResponse::from)
                 .toList();
     }
@@ -116,12 +129,12 @@ public class CartService {
             }
         }
 
-        if (request.purpose() != null) cart.updatePurpose(request.purpose());
+        if (request.category() != null) cart.updateCategory(request.category());
         if (request.cartName() != null) cart.updateName(request.cartName());
         if (request.isPublic() != null) cart.updateIsPublic(request.isPublic());
 
         eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_SETTINGS_UPDATED,
-                new CartSettingsUpdatedEventData(cartId, cart.getName(), cart.isPublic(), cart.getPurpose(), cart.getBudget(), member.getUsername())));
+                new CartSettingsUpdatedEventData(cartId, cart.getName(), cart.isPublic(), cart.getCategory(), cart.getBudget(), member.getUsername())));
 
         return CartResponse.from(cart);
     }
@@ -336,5 +349,4 @@ public class CartService {
             throw new BusinessException(ErrorCode.CART_BUDGET_EXCEEDED);
         }
     }
-
 }

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import wisoft.io.miseprep_api.cart.entity.enums.CartType;
 import wisoft.io.miseprep_api.global.entity.BaseEntity;
+import wisoft.io.miseprep_api.global.enums.Category;
 import wisoft.io.miseprep_api.member.entity.Member;
 
 @Getter
@@ -25,8 +26,9 @@ public class Cart extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String purpose;
+    private Category category;
 
     @Column(nullable = false)
     private boolean isPublic;
@@ -38,27 +40,15 @@ public class Cart extends BaseEntity {
     @Column(nullable = false)
     private CartType cartType;
 
-    @Column(nullable = false)
-    private int likeCount = 0;
-
-    public static Cart create(Member owner, String name, String purpose, boolean isPublic, Integer budget, CartType cartType) {
+    public static Cart create(Member owner, String name, Category category, boolean isPublic, Integer budget, CartType cartType) {
         Cart cart = new Cart();
         cart.owner = owner;
         cart.name = name;
-        cart.purpose = purpose;
+        cart.category = category;
         cart.isPublic = isPublic;
         cart.budget = budget;
         cart.cartType = cartType;
-        cart.likeCount = 0;
         return cart;
-    }
-
-    public void incrementLikeCount() {
-        this.likeCount++;
-    }
-
-    public void decrementLikeCount() {
-        if (this.likeCount > 0) this.likeCount--;
     }
 
     public void updateName(String name) {
@@ -69,8 +59,8 @@ public class Cart extends BaseEntity {
         this.budget = budget;
     }
 
-    public void updatePurpose(String purpose) {
-        this.purpose = purpose;
+    public void updateCategory(Category category) {
+        this.category = category;
     }
 
     public void updateIsPublic(boolean isPublic) {

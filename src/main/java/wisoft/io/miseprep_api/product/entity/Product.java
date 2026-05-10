@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import wisoft.io.miseprep_api.global.enums.Category;
 
 @Getter
 @Entity
@@ -27,10 +28,11 @@ public class Product {
     @Column(nullable = false)
     private String imageUrl;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String category;
+    private Category category;
 
-    public static Product create(String name, String description, int price, String imageUrl, String category) {
+    public static Product create(String name, String description, int price, String imageUrl, Category category) {
         Product product = new Product();
         product.name = name;
         product.description = description;

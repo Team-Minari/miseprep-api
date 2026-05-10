@@ -13,6 +13,7 @@ import wisoft.io.miseprep_api.cart.dto.request.*;
 import wisoft.io.miseprep_api.cart.dto.response.*;
 import wisoft.io.miseprep_api.cart.service.CartService;
 import wisoft.io.miseprep_api.global.dto.ApiResponse;
+import wisoft.io.miseprep_api.global.enums.Category;
 
 import java.util.List;
 
@@ -32,6 +33,15 @@ public class CartController {
         CartResponse data = cartService.createCart(memberId, request);
         ApiResponse<CartResponse> response = ApiResponse.of(data, "장바구니를 생성했습니다.");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "공개 장바구니 목록 조회", description = "category로 필터링 가능. 미입력 시 전체 공개 장바구니 반환")
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<CartResponse>>> getPublicCarts(
+            @RequestParam(required = false) Category category) {
+        List<CartResponse> data = cartService.getPublicCarts(category);
+        ApiResponse<List<CartResponse>> response = ApiResponse.of(data, "공개 장바구니 목록을 조회했습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "내 장바구니 목록 조회")
@@ -72,7 +82,7 @@ public class CartController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "장바구니 설정 수정 (소유자)", description = "이름, 공개 여부, 목적, 예산을 수정합니다. null 필드는 변경되지 않습니다. budget=0 이면 예산 제한을 해제합니다.")
+    @Operation(summary = "장바구니 설정 수정 (소유자)", description = "이름, 공개 여부, 카테고리, 예산을 수정합니다. null 필드는 변경되지 않습니다. budget=0 이면 예산 제한을 해제합니다.")
     @PatchMapping("/{cartId}/settings")
     public ResponseEntity<ApiResponse<CartResponse>> updateCartSetting(
             @AuthenticationPrincipal Long memberId,

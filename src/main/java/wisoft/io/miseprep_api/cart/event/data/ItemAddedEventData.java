@@ -1,6 +1,7 @@
 package wisoft.io.miseprep_api.cart.event.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import wisoft.io.miseprep_api.global.enums.Category;
 
 public record ItemAddedEventData(
         @JsonProperty("cart_id") Long cartId,
@@ -10,7 +11,7 @@ public record ItemAddedEventData(
         int price,
         @JsonProperty("image_url") String imageUrl,
         String description,
-        String category,
+        Category category,
         int quantity,
         @JsonProperty("adder_name") String adderName,
         @JsonProperty("adder_profile_image_url") String adderProfileImageUrl

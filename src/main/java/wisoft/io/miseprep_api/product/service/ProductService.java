@@ -3,6 +3,7 @@ package wisoft.io.miseprep_api.product.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wisoft.io.miseprep_api.global.enums.Category;
 import wisoft.io.miseprep_api.global.exception.BusinessException;
 import wisoft.io.miseprep_api.global.exception.ErrorCode;
 import wisoft.io.miseprep_api.product.dto.request.CreateProductRequest;
@@ -19,7 +20,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    public List<ProductResponse> getProducts(String category, String keyword) {
+    public List<ProductResponse> getProducts(Category category, String keyword) {
         if (category != null) {
             return productRepository.findByCategory(category).stream()
                     .map(ProductResponse::from)

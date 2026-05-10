@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import wisoft.io.miseprep_api.global.dto.ApiResponse;
+import wisoft.io.miseprep_api.global.enums.Category;
 import wisoft.io.miseprep_api.product.dto.request.CreateProductRequest;
 import wisoft.io.miseprep_api.product.dto.response.ProductResponse;
 import wisoft.io.miseprep_api.product.service.ProductService;
@@ -32,7 +33,7 @@ public class ProductController {
     @Operation(summary = "상품 목록 조회", description = "category, keyword로 필터링 가능")
     @GetMapping
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getProducts(
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Category category,
             @RequestParam(required = false) String keyword) {
         List<ProductResponse> data = productService.getProducts(category, keyword);
         ApiResponse<List<ProductResponse>> response = ApiResponse.of(data, "상품 목록을 조회했습니다.");

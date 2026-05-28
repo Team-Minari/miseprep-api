@@ -80,16 +80,19 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public CartDetailResponse getCart(Long memberId, Long cartId) {
-        Cart cart = findCartAsParticipant(memberId, cartId);
-        String token = linkInvitationRepository.findByCartId(cartId)
-                .map(LinkInvitation::getToken)
-                .orElse(null);
+        Cart cart = findCartWithPublicAccess(memberId, cartId);
+        String token = null;
+        if (memberId != null && cartParticipantRepository.existsByCartIdAndMemberId(cartId, memberId)) {
+            token = linkInvitationRepository.findByCartId(cartId)
+                    .map(LinkInvitation::getToken)
+                    .orElse(null);
+        }
         return CartDetailResponse.of(cart, token);
     }
 
     @Transactional(readOnly = true)
     public List<CartItemResponse> getCartItems(Long memberId, Long cartId) {
-        findCartAsParticipant(memberId, cartId);
+        findCartWithPublicAccess(memberId, cartId);
         return cartItemRepository.findAllByCartId(cartId).stream()
                 .map(CartItemResponse::from)
                 .toList();
@@ -318,6 +321,15 @@ public class CartService {
     private Cart findCartAsParticipant(Long memberId, Long cartId) {
         Cart cart = findCart(cartId);
         if (!cartParticipantRepository.existsByCartIdAndMemberId(cartId, memberId)) {
+            throw new BusinessException(ErrorCode.CART_ACCESS_DENIED);
+        }
+        return cart;
+    }
+
+    private Cart findCartWithPublicAccess(Long memberId, Long cartId) {
+        Cart cart = findCart(cartId);
+        if (cart.isPublic()) return cart;
+        if (memberId == null || !cartParticipantRepository.existsByCartIdAndMemberId(cartId, memberId)) {
             throw new BusinessException(ErrorCode.CART_ACCESS_DENIED);
         }
         return cart;

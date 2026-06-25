@@ -43,3 +43,6 @@ bin/
 docs/
 
 data.sql
+#
+#### Local dev only ###
+#**/config/DataInitializer.java

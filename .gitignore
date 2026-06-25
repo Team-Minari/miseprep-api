@@ -39,6 +39,9 @@ bin/
 ### Env ###
 .env
 
+### Postman ###
+*.postman_collection.json
+
 ### Docs ###
 docs/
 

@@ -28,6 +28,8 @@ public enum ErrorCode {
 
     // Product
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 상품입니다"),
+    ALREADY_LIKED_PRODUCT(HttpStatus.CONFLICT, "이미 좋아요한 상품입니다"),
+    PRODUCT_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요하지 않은 상품입니다"),
 
     // Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 장바구니입니다"),

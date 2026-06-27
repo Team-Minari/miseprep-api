@@ -9,16 +9,20 @@ public record ProductResponse(
         String description,
         int price,
         String imageUrl,
-        Category category
+        Category category,
+        long likeCount,
+        boolean isLiked
 ) {
-    public static ProductResponse from(Product product) {
+    public static ProductResponse from(Product product, long likeCount, boolean isLiked) {
         return new ProductResponse(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
                 product.getPrice(),
                 product.getImageUrl(),
-                product.getCategory()
+                product.getCategory(),
+                likeCount,
+                isLiked
         );
     }
 }

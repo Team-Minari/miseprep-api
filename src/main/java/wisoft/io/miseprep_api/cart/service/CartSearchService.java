@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import wisoft.io.miseprep_api.cart.dto.response.CartResponse;
 import wisoft.io.miseprep_api.cart.entity.Cart;
+import wisoft.io.miseprep_api.cart.repository.CartLikeRepository;
 import wisoft.io.miseprep_api.cart.repository.CartRepository;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class CartSearchService {
 
     private final CartRepository cartRepository;
+    private final CartLikeRepository cartLikeRepository;
     private final ObjectMapper objectMapper;
     private final RestClient restClient = RestClient.create();
 
@@ -43,7 +45,10 @@ public class CartSearchService {
 
         return relevantIds.stream()
                 .filter(cartMap::containsKey)
-                .map(id -> CartResponse.from(cartMap.get(id)))
+                .map(id -> {
+                    Cart c = cartMap.get(id);
+                    return CartResponse.from(c, cartLikeRepository.countByCartId(c.getId()), false);
+                })
                 .toList();
     }
 

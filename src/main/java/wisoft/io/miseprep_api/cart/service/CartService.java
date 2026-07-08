@@ -15,7 +15,9 @@ import wisoft.io.miseprep_api.cart.entity.CartItem;
 import wisoft.io.miseprep_api.cart.entity.CartParticipant;
 import wisoft.io.miseprep_api.cart.event.*;
 import wisoft.io.miseprep_api.cart.event.data.*;
+import wisoft.io.miseprep_api.cart.entity.CartLike;
 import wisoft.io.miseprep_api.cart.repository.CartItemRepository;
+import wisoft.io.miseprep_api.cart.repository.CartLikeRepository;
 import wisoft.io.miseprep_api.cart.repository.CartParticipantRepository;
 import wisoft.io.miseprep_api.cart.repository.CartRepository;
 import wisoft.io.miseprep_api.global.exception.BusinessException;
@@ -40,6 +42,7 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartParticipantRepository cartParticipantRepository;
     private final CartItemRepository cartItemRepository;
+    private final CartLikeRepository cartLikeRepository;
     private final LinkInvitationRepository linkInvitationRepository;
     private final EmailInvitationRepository emailInvitationRepository;
     private final MemberRepository memberRepository;
@@ -56,26 +59,49 @@ public class CartService {
         if (!cart.isPersonal()) {
             linkInvitationRepository.save(LinkInvitation.create(cart, UUID.randomUUID().toString()));
         }
-        return CartResponse.from(cart);
+        return toResponse(cart, memberId);
     }
 
     @Transactional(readOnly = true)
     public List<CartResponse> getMyCarts(Long memberId) {
         return cartRepository.findAllByMemberId(memberId).stream()
-                .map(CartResponse::from)
+                .map(c -> toResponse(c, memberId))
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<CartResponse> getPublicCarts(Category category) {
+    public List<CartResponse> getPublicCarts(Long memberId, Category category) {
         if (category != null) {
             return cartRepository.findAllByIsPublicTrueAndCategory(category).stream()
-                    .map(CartResponse::from)
+                    .map(c -> toResponse(c, memberId))
                     .toList();
         }
         return cartRepository.findAllByIsPublicTrue().stream()
-                .map(CartResponse::from)
+                .map(c -> toResponse(c, memberId))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CartResponse> getBestCarts(Long memberId) {
+        return cartLikeRepository.findAllPublicOrderByLikeCountDesc().stream()
+                .map(c -> toResponse(c, memberId))
+                .toList();
+    }
+
+    public void likeCart(Long memberId, Long cartId) {
+        Cart cart = findCart(cartId);
+        if (!cart.isPublic()) throw new BusinessException(ErrorCode.CART_NOT_PUBLIC);
+        if (cartLikeRepository.existsByMemberIdAndCartId(memberId, cartId)) {
+            throw new BusinessException(ErrorCode.ALREADY_LIKED_CART);
+        }
+        Member member = findMember(memberId);
+        cartLikeRepository.save(CartLike.create(member, cart));
+    }
+
+    public void unlikeCart(Long memberId, Long cartId) {
+        CartLike like = cartLikeRepository.findByMemberIdAndCartId(memberId, cartId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CART_LIKE_NOT_FOUND));
+        cartLikeRepository.delete(like);
     }
 
     @Transactional(readOnly = true)
@@ -140,7 +166,7 @@ public class CartService {
         eventPublisher.publishEvent(new CartEvent(cartId, CartEventType.CART_SETTINGS_UPDATED,
                 new CartSettingsUpdatedEventData(cartId, cart.getName(), cart.isPublic(), cart.getCategory(), cart.getPurpose(), cart.getBudget(), member.getUsername())));
 
-        return CartResponse.from(cart);
+        return toResponse(cart, memberId);
     }
 
     public void deleteCart(Long memberId, Long cartId) {
@@ -349,6 +375,12 @@ public class CartService {
     private Member findMember(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private CartResponse toResponse(Cart cart, Long memberId) {
+        long likeCount = cartLikeRepository.countByCartId(cart.getId());
+        boolean isLiked = memberId != null && cartLikeRepository.existsByMemberIdAndCartId(memberId, cart.getId());
+        return CartResponse.from(cart, likeCount, isLiked);
     }
 
     private void validateBudget(Cart cart, Long cartId, int unitPrice, int additionalQuantity) {

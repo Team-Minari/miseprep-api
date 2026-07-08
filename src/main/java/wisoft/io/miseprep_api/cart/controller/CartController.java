@@ -48,9 +48,19 @@ public class CartController {
     @Operation(summary = "공개 장바구니 목록 조회", description = "category로 필터링 가능. 미입력 시 전체 공개 장바구니 반환")
     @GetMapping
     public ResponseEntity<ApiResponse<List<CartResponse>>> getPublicCarts(
+            @AuthenticationPrincipal Long memberId,
             @RequestParam(required = false) Category category) {
-        List<CartResponse> data = cartService.getPublicCarts(category);
+        List<CartResponse> data = cartService.getPublicCarts(memberId, category);
         ApiResponse<List<CartResponse>> response = ApiResponse.of(data, "공개 장바구니 목록을 조회했습니다.");
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "좋아요 순 베스트 장바구니 조회")
+    @GetMapping("/best")
+    public ResponseEntity<ApiResponse<List<CartResponse>>> getBestCarts(
+            @AuthenticationPrincipal Long memberId) {
+        List<CartResponse> data = cartService.getBestCarts(memberId);
+        ApiResponse<List<CartResponse>> response = ApiResponse.of(data, "베스트 장바구니 목록을 조회했습니다.");
         return ResponseEntity.ok(response);
     }
 
@@ -208,6 +218,26 @@ public class CartController {
             @PathVariable Long targetMemberId) {
         cartService.kickParticipant(memberId, cartId, targetMemberId);
         ApiResponse<Void> response = ApiResponse.of(null, "참여자를 강퇴했습니다.");
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "장바구니 좋아요", description = "공개 장바구니에만 좋아요할 수 있습니다.")
+    @PostMapping("/{cartId}/like")
+    public ResponseEntity<ApiResponse<Void>> likeCart(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long cartId) {
+        cartService.likeCart(memberId, cartId);
+        ApiResponse<Void> response = ApiResponse.of(null, "장바구니에 좋아요를 눌렀습니다.");
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "장바구니 좋아요 취소")
+    @DeleteMapping("/{cartId}/like")
+    public ResponseEntity<ApiResponse<Void>> unlikeCart(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long cartId) {
+        cartService.unlikeCart(memberId, cartId);
+        ApiResponse<Void> response = ApiResponse.of(null, "장바구니 좋아요를 취소했습니다.");
         return ResponseEntity.ok(response);
     }
 

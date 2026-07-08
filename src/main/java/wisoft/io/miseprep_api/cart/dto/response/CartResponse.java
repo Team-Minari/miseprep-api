@@ -13,9 +13,11 @@ public record CartResponse(
         @JsonProperty("is_public") boolean isPublic,
         Integer budget,
         @JsonProperty("owner_id") Long ownerId,
-        @JsonProperty("cart_type") CartType cartType
+        @JsonProperty("cart_type") CartType cartType,
+        @JsonProperty("like_count") long likeCount,
+        @JsonProperty("is_liked") boolean isLiked
 ) {
-    public static CartResponse from(Cart cart) {
+    public static CartResponse from(Cart cart, long likeCount, boolean isLiked) {
         return new CartResponse(
                 cart.getId(),
                 cart.getName(),
@@ -24,7 +26,9 @@ public record CartResponse(
                 cart.isPublic(),
                 cart.getBudget(),
                 cart.getOwner().getId(),
-                cart.getCartType()
+                cart.getCartType(),
+                likeCount,
+                isLiked
         );
     }
 }

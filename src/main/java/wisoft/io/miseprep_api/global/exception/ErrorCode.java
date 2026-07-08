@@ -33,6 +33,9 @@ public enum ErrorCode {
 
     // Cart
     CART_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 장바구니입니다"),
+    ALREADY_LIKED_CART(HttpStatus.CONFLICT, "이미 좋아요한 장바구니입니다"),
+    CART_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요하지 않은 장바구니입니다"),
+    CART_NOT_PUBLIC(HttpStatus.FORBIDDEN, "공개 장바구니에만 좋아요할 수 있습니다"),
     CART_ACCESS_DENIED(HttpStatus.FORBIDDEN, "장바구니에 접근할 권한이 없습니다"),
     CART_OWNER_REQUIRED(HttpStatus.FORBIDDEN, "장바구니 소유자만 수행할 수 있습니다"),
     ALREADY_CART_PARTICIPANT(HttpStatus.CONFLICT, "이미 참여 중인 장바구니입니다"),

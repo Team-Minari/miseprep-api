@@ -11,6 +11,7 @@ import wisoft.io.miseprep_api.global.dto.ApiResponse;
 import wisoft.io.miseprep_api.invitation.dto.request.RespondInvitationRequest;
 import wisoft.io.miseprep_api.invitation.dto.request.SendInvitationRequest;
 import wisoft.io.miseprep_api.invitation.dto.response.InvitationResponse;
+import wisoft.io.miseprep_api.invitation.entity.enums.InvitationStatus;
 import wisoft.io.miseprep_api.invitation.service.InvitationService;
 
 import java.util.List;
@@ -49,7 +50,8 @@ public class InvitationController {
             @PathVariable Long invitationId,
             @RequestBody RespondInvitationRequest request) {
         InvitationResponse data = invitationService.respond(memberId, invitationId, request);
-        ApiResponse<InvitationResponse> response = ApiResponse.of(data, "초대에 응답했습니다.");
+        String message = request.status() == InvitationStatus.ACCEPTED ? "초대를 수락했습니다." : "초대를 거절했습니다.";
+        ApiResponse<InvitationResponse> response = ApiResponse.of(data, message);
         return ResponseEntity.ok(response);
     }
 

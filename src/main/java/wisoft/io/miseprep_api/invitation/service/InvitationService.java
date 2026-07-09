@@ -49,7 +49,7 @@ public class InvitationService {
         Member inviter = memberRepository.findById(inviterId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         EmailInvitation invitation = emailInvitationRepository.save(EmailInvitation.create(cart, inviter, invitee));
-        emailService.sendCartInvitation(invitee.getEmail(), inviter.getUsername(), cart.getName());
+        emailService.sendCartInvitation(invitee.getEmail(), inviter.getUsername(), cart.getName(), invitation.getId());
         return InvitationResponse.from(invitation);
     }
 

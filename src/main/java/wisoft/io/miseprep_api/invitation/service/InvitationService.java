@@ -15,6 +15,7 @@ import wisoft.io.miseprep_api.invitation.dto.response.InvitationResponse;
 import wisoft.io.miseprep_api.invitation.entity.EmailInvitation;
 import wisoft.io.miseprep_api.invitation.entity.enums.InvitationStatus;
 import wisoft.io.miseprep_api.invitation.repository.EmailInvitationRepository;
+import wisoft.io.miseprep_api.global.service.EmailService;
 import wisoft.io.miseprep_api.member.entity.Member;
 import wisoft.io.miseprep_api.member.repository.MemberRepository;
 
@@ -29,6 +30,7 @@ public class InvitationService {
     private final CartRepository cartRepository;
     private final CartParticipantRepository cartParticipantRepository;
     private final MemberRepository memberRepository;
+    private final EmailService emailService;
 
     public InvitationResponse sendInvitation(Long inviterId, Long cartId, SendInvitationRequest request) {
         Cart cart = findCartAsParticipant(inviterId, cartId);
@@ -47,6 +49,7 @@ public class InvitationService {
         Member inviter = memberRepository.findById(inviterId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         EmailInvitation invitation = emailInvitationRepository.save(EmailInvitation.create(cart, inviter, invitee));
+        emailService.sendCartInvitation(invitee.getEmail(), inviter.getUsername(), cart.getName());
         return InvitationResponse.from(invitation);
     }
 

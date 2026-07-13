@@ -49,6 +49,12 @@ public enum ErrorCode {
     OWNER_CANNOT_LEAVE_CART(HttpStatus.FORBIDDEN, "소유자는 장바구니를 나갈 수 없습니다. 소유권을 이전한 후 나가주세요."),
     CART_OWNER_CANNOT_BE_KICKED(HttpStatus.FORBIDDEN, "소유자는 강퇴할 수 없습니다."),
 
+    // Order
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 주문입니다"),
+    ORDER_CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니에 존재하지 않는 상품이 포함되어 있습니다"),
+    PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "결제 금액이 일치하지 않습니다"),
+    PAYMENT_CONFIRM_FAILED(HttpStatus.BAD_REQUEST, "결제 승인에 실패했습니다"),
+
     // Invitation
     INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 초대입니다"),
     INVITATION_ALREADY_PENDING(HttpStatus.CONFLICT, "이미 대기 중인 초대가 있습니다"),

@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/carts/{cartId}").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/carts/{cartId}/items").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/carts/search").permitAll()
+                        .requestMatchers("/api/orders/**").authenticated()
                         .requestMatchers("/api/test/**").permitAll()
                         .anyRequest().authenticated()
                 )

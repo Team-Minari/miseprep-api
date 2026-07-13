@@ -92,7 +92,7 @@ public class OrderService {
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of(
                             "paymentKey", request.paymentKey(),
-                            "orderId", String.valueOf(request.orderId()),
+                            "orderId", request.tossOrderId(),
                             "amount", request.amount()
                     ))
                     .retrieve()

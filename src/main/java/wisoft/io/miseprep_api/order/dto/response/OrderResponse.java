@@ -8,6 +8,7 @@ import java.util.List;
 
 public record OrderResponse(
         Long id,
+        @JsonProperty("toss_order_id") String tossOrderId,
         @JsonProperty("cart_id") Long cartId,
         @JsonProperty("shipping_address") String shippingAddress,
         @JsonProperty("total_amount") int totalAmount,
@@ -35,6 +36,7 @@ public record OrderResponse(
 
         return new OrderResponse(
                 order.getId(),
+                "ORDER-" + order.getId(),
                 order.getCart().getId(),
                 order.getShippingAddress(),
                 order.getTotalAmount(),
